@@ -14,7 +14,7 @@ asynchronous) for the Xilinx FIFO IPs killed my application's performance.
   
 2. in Vivado GUI: add the git folder as a User IP repository in IP Catalog,  
    or in Vivado Tcl Console, run command :
-   **set_property  ip_repo_paths  [list [get_property ip_repo_paths [current_project]] <path to the cloned repository>] [current_project]**
+   **set_property  ip_repo_paths  [list [get_property ip_repo_paths [current_project]] \<path to the cloned repository\>] [current_project]**
             
 3. instantiate the IP named "easy_fifo"
         
