@@ -27,6 +27,9 @@ The main motivation of making Easy FIFO is that the large latency (3 cycles for 
 After instantiated Easy FIFO in Vivado, right click the IP and click "Open IP Example Design". A testbench would be automatically generated based on the IP configuration.
     
 Example synthesis design is currently not provided.
+
+## Example Configuration:
+![config](/pictures/FIFO_config.png)
     
 ## Bug Report:
 Please email qianfeng.shen@gmail.com if you find a bug, or open an issue here.
