@@ -10,9 +10,10 @@ The main motivation of making Easy FIFO is that the large latency (3 cycles for 
     
 **Vivado IP flow:**
   
-2. in Vivado GUI: 
-   add the git folder as a User IP repository in IP Catalog.
-   Alternatively, in Vivado Tcl Console, run command :
+2. in Vivado GUI:  
+   **add the git folder as a User IP repository in IP Catalog.**
+         
+   Alternatively, in Vivado Tcl Console, run command :  
    **set_property  ip_repo_paths  [list [get_property ip_repo_paths [current_project]] \<path to the cloned repository\>] [current_project]**
             
 3. instantiate the IP named "easy_fifo"
