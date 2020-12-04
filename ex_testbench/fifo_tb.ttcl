@@ -1,0 +1,312 @@
+<: ;#fix header :>
+<: set ComponentName [getComponentNameString] :>
+<: setFileName [ttcl_string_concat [getComponentNameString] "_tb"] :>
+<: setFileExtension ".sv" :>
+<: setOutputDirectory "./" :>
+<: ;#variables :>
+<: set ASYNC [getIntValue "ASYNC"] :>
+<: set AXIS [getIntValue "AXIS"] :>
+<: if {$AXIS != 0} { set AXIS 1 } :>
+<: set DWIDTH [getIntValue "DWIDTH"] :>
+<: set DEPTH [getIntValue "DEPTH"] :>
+<: set INPUT_REG [getIntValue "INPUT_REG"] :>
+<: set OUTPUT_REG [getIntValue "OUTPUT_REG"] :>
+<: set HAS_KEEP [ expr $AXIS && [getIntValue "HAS_KEEP"]] :>
+<: set HAS_LAST [ expr $AXIS && [getIntValue "HAS_LAST"]] :>
+<: set HAS_STRB [ expr $AXIS && [getIntValue "HAS_STRB"]] :>
+<: set DEST_WIDTH [ expr $AXIS * [getIntValue "DEST_WIDTH"]] :>
+<: set USER_WIDTH [ expr $AXIS * [getIntValue "USER_WIDTH"]] :>
+<: set ID_WIDTH [ expr $AXIS * [getIntValue "ID_WIDTH"]] :>
+<: if {$ASYNC == 0} { :>
+<: set i_clk "clk" :>
+<: set o_clk "clk" :>
+<: } else { :>
+<:		if {$AXIS == 0} { :>
+<:			set i_clk "wr_clk" :>
+<:			set o_clk "rd_clk" :>
+<:		} else { :>
+<:			set i_clk "s_axis_clk" :>
+<:			set o_clk "m_axis_clk" :>
+<:		} :>
+<: } :>
+<: if {$AXIS == 0} { :>
+<: set i_data "wr_data" :>
+<: set o_data "rd_data" :>
+<: set i_valid "wr_en" :>
+<: set o_valid "rd_empty" :>
+<: set i_ready "wr_full" :>
+<: set o_ready "rd_en" :>
+<: } else { :>
+<: set i_data "s_axis_tdata" :>
+<: set o_data "m_axis_tdata" :>
+<: set i_valid "s_axis_tvalid" :>
+<: set o_valid "m_axis_tvalid" :>
+<: set i_ready "s_axis_tready" :>
+<: set o_ready "m_axis_tready" :>
+<: } :>
+<: ;#start of systemverilog :>
+`timescale 1ps/1ps
+class randvec #(int SIZE = 8);
+    rand bit[SIZE-1:0] data;
+endclass
+`include "gen_clk.svh"
+
+module <=: $ComponentName :>_tb ();
+
+<: if {$ASYNC != 0} { :>
+    localparam realtime INPUT_CLK_PERIOD = 5ns;
+    localparam realtime OUTPUT_CLK_PERIOD = 3ns;
+<: } else { :>
+    localparam realtime INPUT_CLK_PERIOD = 5ns;
+    localparam realtime OUTPUT_CLK_PERIOD = 5ns;
+<: } :>
+
+    localparam int ASYNC = <=: $ASYNC :>;
+    localparam int DWIDTH = <=: $DWIDTH :>;
+    localparam int DEPTH = <=: $DEPTH :>;
+    localparam int INPUT_REG = <=: $INPUT_REG :>;
+    localparam int OUTPUT_REG = <=: $OUTPUT_REG :>;
+
+    enum integer {
+        TRY_FULL='b00,
+        STEADY='b01,
+        TRY_EMPTY='b10,
+        FINISH='b11
+    } state;
+
+    logic rst;
+<: if {$ASYNC == 0} { :>
+    logic clk;
+<: } else { :>
+    logic <=: $i_clk :>,<=: $o_clk :>;
+<: } :>
+    logic [DWIDTH-1:0] <=: $i_data :>, <=: $o_data :>;
+    logic <=: $i_valid :>, <=: $o_valid :>;
+    logic <=: $i_ready :>, <=: $o_ready :>;
+
+    //don't know why these wires have to be presented in vivado
+    logic [DWIDTH-1:0] <=: $i_data :>_wire;
+    logic <=: $i_valid :>_wire, <=: $o_ready :>_wire;
+
+<: if {$AXIS != 0} { :>
+    //axis optional ports
+<: } :>
+<: if {$HAS_KEEP != 0} { :>
+    logic [DWIDTH/8-1:0] s_axis_tkeep, m_axis_tkeep;
+<: } :>
+<: if {$HAS_STRB != 0} { :>
+    logic [DWIDTH/8-1:0] s_axis_tstrb, m_axis_tstrb;
+<: } :>
+<: if {$HAS_LAST != 0} { :>
+    logic s_axis_tlast, m_axis_tlast;
+<: } :>
+<: if {$DEST_WIDTH != 0} { :>
+    logic [<=: [expr $DEST_WIDTH-1] :>:0] s_axis_tdest, m_axis_tdest;
+<: } :>
+<: if {$USER_WIDTH != 0} { :>
+    logic [<=: [expr $USER_WIDTH-1] :>:0] s_axis_tuser, m_axis_tuser;
+<: } :>
+<: if {$ID_WIDTH != 0} { :>
+    logic [<=: [expr $ID_WIDTH-1] :>:0] s_axis_tid, m_axis_tid;
+<: } :>
+
+    randvec #(DWIDTH) vec = new;
+
+    //virutal FIFO
+    logic [DWIDTH-1:0] vFIFO[2*DEPTH-1:0];
+    logic [$clog2(DEPTH):0] v_ridx,v_widx;
+    logic [DWIDTH-1:0] golden_data;
+
+    int s_wait_cnt;
+    int m_wait_cnt;
+    int s_wait_cycle;
+    int m_wait_cycle;
+    real s_linerate;
+    real m_linerate;
+
+    <=: $ComponentName :> # (
+        .ASYNC(<=: $ASYNC :>),
+        .AXIS(<=: $AXIS :>),
+        .DWIDTH(<=: $DWIDTH :>),
+        .DEPTH(<=: $DEPTH :>),
+        .INPUT_REG(<=: $INPUT_REG :>),
+        .OUTPUT_REG(<=: $OUTPUT_REG :>),
+        .HAS_KEEP(<=: $HAS_KEEP :>),
+        .HAS_LAST(<=: $HAS_LAST :>),
+        .HAS_STRB(<=: $HAS_STRB :>),
+        .DEST_WIDTH(<=: $DEST_WIDTH :>),
+        .USER_WIDTH(<=: $USER_WIDTH :>),
+        .ID_WIDTH(<=: $ID_WIDTH :>)
+    ) u_easy_fifo (
+        .*,
+<: if {$AXIS == 0} { :>
+        .wr_data(wr_data_wire),
+        .wr_en(wr_en_wire),
+        .rd_en(rd_en_wire)
+<: } else { :>
+        .s_axis_tdata(s_axis_tdata_wire),
+        .s_axis_tvalid(s_axis_tvalid_wire),
+        .m_axis_tready(m_axis_tready_wire)
+<: } :>
+    );
+
+
+//control
+    initial begin
+        rst = 1'b1;
+        $display("start by making the input rate 10 times higher than output rate");
+        s_wait_cycle = 2;
+        s_linerate = 1/real'(s_wait_cycle)*1/INPUT_CLK_PERIOD;
+        m_linerate = s_linerate/10;
+        m_wait_cycle = int'(1/(m_linerate*OUTPUT_CLK_PERIOD));
+        state = TRY_FULL;
+        #100ns;
+        rst = 1'b0;
+<: if {$AXIS == 0} { :>
+        wait(wr_full == 1'b1);
+<: } else { :>
+        wait(s_axis_tready === 1'b0);
+<: } :>
+        $display("FIFO is full now, try keep push it for 1 us");
+        #1us;
+        $display("now match the output rate with the input rate, keep for 1 us");
+        m_linerate = s_linerate;
+        m_wait_cycle = int'(1/(m_linerate*OUTPUT_CLK_PERIOD));
+        state = STEADY;
+        #1us;
+        $display("try empty the fifo, make the input rate 10 times slower than output rate");
+        m_wait_cycle = 2;
+        m_linerate = 1/real'(m_wait_cycle)*1/OUTPUT_CLK_PERIOD;
+        s_linerate = m_linerate/10;
+        s_wait_cycle = int'(1/(s_linerate*INPUT_CLK_PERIOD));
+        state = TRY_EMPTY;
+<: if {$AXIS == 0} { :>
+        wait(rd_empty === 1'b1);
+<: } else { :>
+        wait(m_axis_tvalid === 1'b0);
+<: } :>
+        $display("FIFO is empty now, try keep push it for 1 us");
+        #1us;
+        $display("test finished");
+        state = FINISH;
+    end
+
+//slave
+    initial begin
+        s_wait_cnt = s_wait_cycle;
+        wait(rst === 1'b0);
+        while (state !== FINISH) begin
+            @(posedge <=: $i_clk :>);
+            if (s_wait_cnt === 0)
+                s_wait_cnt = s_wait_cycle;
+            vec.randomize();
+            s_wait_cnt = s_wait_cnt - 1;
+        end
+    end
+
+//master
+    initial begin
+        m_wait_cnt = m_wait_cycle;
+        <=: $o_ready :> = 1'b0;
+        wait(rst === 1'b0);
+        while (state !== FINISH || v_ridx !== v_widx) begin
+            @(posedge <=: $o_clk :>);
+<: if {$AXIS == 0} { :>
+            if (~rd_empty && rd_en_wire && golden_data !== <=: $o_data :>) begin
+<: } else { :>
+            if (m_axis_tvalid && m_axis_tready_wire && golden_data !== <=: $o_data :>) begin
+<: } :>
+                $display("[%t] : NOT match! expected %x, get %x", $time, golden_data, <=: $o_data :>);
+                #(OUTPUT_CLK_PERIOD);
+                $finish;
+            end
+            if (m_wait_cnt === 0) begin
+                m_wait_cnt = m_wait_cycle;
+                <=: $o_ready :> = 1'b1;
+            end
+            else begin
+                <=: $o_ready :> = 1'b0;
+            end
+            m_wait_cnt = m_wait_cnt - 1;
+        end
+        $display("All matched!");
+        #100ns;
+        $finish;
+    end
+
+    always_ff @(posedge <=: $i_clk :>, posedge rst) begin
+        if (rst) begin
+            <=: $i_data :> <= {DWIDTH{1'b0}};
+            <=: $i_valid :> <= 1'b0;
+        end
+<: if {$AXIS == 0} { :>
+        else if (s_wait_cnt === 0 && ~wr_full) begin
+<: } else { :>
+        else if (s_wait_cnt === 0 && s_axis_tready) begin
+<: } :>
+            <=: $i_data :> <= vec.data;
+            <=: $i_valid :> <= 1'b1;
+        end
+        else if (s_wait_cnt !== 0) begin
+            <=: $i_valid :> <= 1'b0;
+            <=: $i_data :> <= {DWIDTH{1'b0}};
+        end
+    end
+
+    always_ff @(posedge <=: $i_clk :>, posedge rst) begin
+        if (rst) begin
+            v_widx <= 'b0;
+        end
+<: if {$AXIS == 0} { :>
+        else if (wr_en_wire && ~wr_full) begin
+<: } else { :>   
+        else if (s_axis_tvalid_wire && s_axis_tready) begin
+<: } :>
+            vFIFO[v_widx] <= <=: $i_data :>_wire;
+            v_widx <= v_widx + 1'b1;
+        end
+    end
+
+    always_ff @(posedge <=: $o_clk :>, posedge rst) begin
+        if (rst)
+            v_ridx <= 'b0;
+<: if {$AXIS == 0} { :>
+        else if (rd_en_wire && ~rd_empty)
+<: } else { :>
+        else if (m_axis_tready_wire && m_axis_tvalid)
+<: } :>
+            v_ridx <= v_ridx + 1'b1;
+    end 
+
+<: if {$ASYNC != 0} { :>
+    `GEN_CLK(<=: $i_clk :>,INPUT_CLK_PERIOD,1);
+    `GEN_CLK(<=: $o_clk :>,OUTPUT_CLK_PERIOD,1);
+<: } else { :>
+    `GEN_CLK(clk,INPUT_CLK_PERIOD,1);
+<: } :>
+
+    assign golden_data = vFIFO[v_ridx];
+
+    assign <=: $i_data :>_wire = <=: $i_data :>;
+    assign <=: $i_valid :>_wire = <=: $i_valid :>;
+    assign <=: $o_ready :>_wire = <=: $o_ready :>;
+
+<: if {$HAS_KEEP != 0} { :>
+    assign s_axis_tkeep = {DWIDTH/8{1'b1}};
+<: } :>
+<: if {$HAS_STRB != 0} { :>
+    assign s_axis_tstrb = {DWIDTH/8{1'b1}};
+<: } :>
+<: if {$HAS_LAST != 0} { :>
+    assign s_axis_tlast = 1'b0;
+<: } :>
+<: if {$DEST_WIDTH != 0} { :>
+    assign s_axis_tdest = <=: $DEST_WIDTH :>'b0;
+<: } :>
+<: if {$USER_WIDTH != 0} { :>
+    assign s_axis_tuser = <=: $USER_WIDTH :>'b0;
+<: } :>
+<: if {$ID_WIDTH != 0} { :>
+    assign s_axis_tid = <=: $ID_WIDTH :>'b0;
+<: } :>
+endmodule

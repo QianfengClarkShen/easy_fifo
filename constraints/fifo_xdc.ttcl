@@ -1,0 +1,10 @@
+<: ;#fix header :>
+<: set ComponentName [getComponentNameString] :>
+<: setFileName [ttcl_string_concat [getComponentNameString] "_xdc"] :>
+<: setFileExtension ".xdc" :>
+<: setOutputDirectory "./" :>
+<: ;#variables :>
+<: set ASYNC [getIntValue "ASYNC"] :>
+<: if {$ASYNC != 0} { :>
+set_false_path -to [get_cells -hierarchical -filter {NAME =~ *u_sync_signle_bit*/*d_meta*}] -quiet
+<: } :>

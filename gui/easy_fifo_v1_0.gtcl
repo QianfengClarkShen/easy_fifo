@@ -1,0 +1,7 @@
+# This file is automatically written.  Do not modify.
+proc gen_USERPARAMETER_HAS_KEEP_ENABLEMENT {AXIS } {expr $AXIS != 0}
+proc gen_USERPARAMETER_HAS_LAST_ENABLEMENT {AXIS } {expr $AXIS != 0}
+proc gen_USERPARAMETER_HAS_STRB_ENABLEMENT {AXIS } {expr $AXIS != 0}
+proc gen_USERPARAMETER_DEST_WIDTH_ENABLEMENT {AXIS } {expr $AXIS != 0}
+proc gen_USERPARAMETER_USER_WIDTH_ENABLEMENT {AXIS } {expr $AXIS != 0}
+proc gen_USERPARAMETER_ID_WIDTH_ENABLEMENT {AXIS } {expr $AXIS != 0}
