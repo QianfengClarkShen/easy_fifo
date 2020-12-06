@@ -10,7 +10,7 @@ module graycntr #
 );
     logic [SIZE-1:0] bin;
     logic [SIZE-1:0] bin_reg;
-    always_ff @(posedge clk) begin
+    always_ff @(posedge clk or posedge rst) begin
         if (rst) begin
             bin_reg <= 1'b0;
             gray <= 1'b0;

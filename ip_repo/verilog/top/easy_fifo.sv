@@ -19,28 +19,28 @@ module easy_fifo #
 (
     input logic rst,
 //clk
-    input logic clk = 1'b0,
-    input logic rd_clk = 1'b0,
-    input logic wr_clk = 1'b0,
-    input logic s_axis_clk = 1'b0,
-    input logic m_axis_clk = 1'b0,
+    input logic clk,
+    input logic rd_clk,
+    input logic wr_clk,
+    input logic s_axis_clk,
+    input logic m_axis_clk,
 //regular fifo interface
-    input logic [DWIDTH-1:0] wr_data = {DWIDTH{1'b0}},
-    input logic wr_en = 1'b0,
+    input logic [DWIDTH-1:0] wr_data,
+    input logic wr_en,
     output logic wr_full,
-    input logic rd_en = 1'b1,
+    input logic rd_en,
     output logic [DWIDTH-1:0] rd_data,
     output logic rd_empty,
 //axis interface
-    input logic [DWIDTH-1:0] s_axis_tdata = {DWIDTH{1'b0}},
-    input logic s_axis_tvalid = 1'b0,
-    input logic [DWIDTH/8-1:0] s_axis_tkeep = {DWIDTH/8{1'b0}},
-    input logic s_axis_tlast = 1'b0,
-    input logic [DWIDTH/8-1:0] s_axis_tstrb = {DWIDTH/8{1'b0}},
-    input logic [`WIDTH_VAL(DEST_WIDTH)-1:0] s_axis_tdest = {`WIDTH_VAL(DEST_WIDTH){1'b0}},
-    input logic [`WIDTH_VAL(USER_WIDTH)-1:0] s_axis_tuser = {`WIDTH_VAL(USER_WIDTH){1'b0}},
-    input logic [`WIDTH_VAL(ID_WIDTH)-1:0] s_axis_tid = {`WIDTH_VAL(ID_WIDTH){1'b0}},
-    input logic m_axis_tready = 1'b1,
+    input logic [DWIDTH-1:0] s_axis_tdata,
+    input logic s_axis_tvalid,
+    input logic [DWIDTH/8-1:0] s_axis_tkeep,
+    input logic s_axis_tlast,
+    input logic [DWIDTH/8-1:0] s_axis_tstrb,
+    input logic [`WIDTH_VAL(DEST_WIDTH)-1:0] s_axis_tdest,
+    input logic [`WIDTH_VAL(USER_WIDTH)-1:0] s_axis_tuser,
+    input logic [`WIDTH_VAL(ID_WIDTH)-1:0] s_axis_tid,
+    input logic m_axis_tready,
     output logic s_axis_tready,
     output logic [DWIDTH-1:0] m_axis_tdata,
     output logic m_axis_tvalid,
@@ -52,13 +52,13 @@ module easy_fifo #
     output logic [`WIDTH_VAL(ID_WIDTH)-1:0] m_axis_tid
 );
     localparam int VEC_WIDTH = DWIDTH+DWIDTH/8*HAS_KEEP+DWIDTH/8*HAS_STRB+HAS_LAST+DEST_WIDTH+USER_WIDTH+ID_WIDTH;
-    localparam int TDATA_IDX = VEC_WIDTH-1;
-    localparam int TKEEP_IDX = TDATA_IDX-DWIDTH;
-    localparam int TSTRB_IDX = TKEEP_IDX-DWIDTH/8*HAS_KEEP;
-    localparam int TLAST_IDX = TSTRB_IDX-DWIDTH/8*HAS_STRB;
-    localparam int TDEST_IDX = TLAST_IDX-HAS_LAST;
-    localparam int TUSER_IDX = TDEST_IDX-DEST_WIDTH;
-    localparam int TID_IDX = TUSER_IDX-USER_WIDTH;
+    localparam int TDATA_IDX = DWIDTH-1;
+    localparam int TKEEP_IDX = TDATA_IDX+DWIDTH/8*HAS_KEEP;
+    localparam int TSTRB_IDX = TKEEP_IDX+DWIDTH/8*HAS_STRB;
+    localparam int TLAST_IDX = TSTRB_IDX+HAS_LAST;
+    localparam int TDEST_IDX = TLAST_IDX+DEST_WIDTH;
+    localparam int TUSER_IDX = TDEST_IDX+USER_WIDTH;
+    localparam int TID_IDX = TUSER_IDX+ID_WIDTH;
 
     logic [VEC_WIDTH-1:0] input_vec, output_vec;
     if (AXIS) begin
