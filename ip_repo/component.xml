@@ -413,7 +413,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>78963585</spirit:value>
+            <spirit:value>db8b082c</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -429,7 +429,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>d78ea412</spirit:value>
+            <spirit:value>e06ff183</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -457,7 +457,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>da0e6140</spirit:value>
+            <spirit:value>abf8192a</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -1219,6 +1219,10 @@
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
+        <spirit:name>verilog/top/rst_cntrl.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
         <spirit:name>verilog/async_fifo/simple_dp_ram.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
@@ -1229,7 +1233,7 @@
       <spirit:file>
         <spirit:name>verilog/async_fifo/sync_single_bit.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
-        <spirit:userFileType>CHECKSUM_dfe410bb</spirit:userFileType>
+        <spirit:userFileType>CHECKSUM_04d35e0a</spirit:userFileType>
       </spirit:file>
       <spirit:file>
         <spirit:name>constraints/fifo_xdc.ttcl</spirit:name>
@@ -1272,6 +1276,10 @@
       </spirit:file>
       <spirit:file>
         <spirit:name>verilog/async_fifo/graycode_util.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>verilog/top/rst_cntrl.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
@@ -1465,12 +1473,12 @@
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
       <xilinx:vendorDisplayName>clarkshen.com</xilinx:vendorDisplayName>
       <xilinx:coreRevision>2</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-12-06T04:35:43Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2020-12-07T02:59:53Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
       <xilinx:xilinxVersion>2020.1</xilinx:xilinxVersion>
       <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="a52a050d"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="2e9f00f0"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="cf061be9"/>
       <xilinx:checksum xilinx:scope="ports" xilinx:value="77f74c28"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="29a0890b"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="5f98d710"/>

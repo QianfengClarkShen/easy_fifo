@@ -5,6 +5,8 @@ module async_fifo #
 )
 (
     input logic rst,
+    input logic wr_rst,
+    input logic rd_rst,
     input logic wr_clk,
     input logic rd_clk,
     input logic wr_en,
@@ -49,10 +51,16 @@ module async_fifo #
     );
 
     async_rd_ctrl #(
-        .DEPTH  (DEPTH  )
-    ) u_async_rd_ctrl (.*);
+        .DEPTH  (DEPTH)
+    ) u_async_rd_ctrl (
+        .*,
+        .rst(rd_rst)
+    );
     async_wr_ctrl #(
-        .DEPTH  (DEPTH  )
-    ) u_async_wr_ctrl(.*);
+        .DEPTH  (DEPTH)
+    ) u_async_wr_ctrl(
+        .*,
+        .rst(wr_rst)
+    );
 
 endmodule

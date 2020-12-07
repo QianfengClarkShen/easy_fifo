@@ -195,6 +195,8 @@ module <=: $ComponentName :>_tb ();
     initial begin
         s_wait_cnt = s_wait_cycle;
         wait(rst === 1'b0);
+        repeat(10) @(posedge <=: $i_clk :>);
+        repeat(10) @(posedge <=: $o_clk :>);
         while (state !== FINISH) begin
             @(posedge <=: $i_clk :>);
             if (s_wait_cnt === 0)
@@ -209,6 +211,8 @@ module <=: $ComponentName :>_tb ();
         m_wait_cnt = m_wait_cycle;
         <=: $o_ready :> = 1'b0;
         wait(rst === 1'b0);
+        repeat(10) @(posedge <=: $i_clk :>);
+        repeat(10) @(posedge <=: $o_clk :>);
         while (state !== FINISH || v_ridx !== v_widx) begin
             @(posedge <=: $o_clk :>);
 <: if {$AXIS == 0} { :>

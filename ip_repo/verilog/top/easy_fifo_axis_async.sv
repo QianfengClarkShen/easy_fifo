@@ -16,8 +16,11 @@ module easy_fifo_axis_async #
     output logic m_axis_tvalid,
     input logic m_axis_tready = 1'b1
 );
+//internal rsts
+    logic wr_rst, rd_rst;
+
 //internal clocks
-    logic wr_clk_int, rd_clk_int;
+    logic wr_clk, rd_clk;
 
 //internal data
     logic [DWIDTH-1:0] wr_data_int, rd_data_int;
@@ -28,15 +31,15 @@ module easy_fifo_axis_async #
     logic [DWIDTH-1:0] rd_data_async;
     logic wr_full_async, rd_empty_async;
 
-    assign wr_clk_int = s_axis_clk;
-    assign rd_clk_int = m_axis_clk;
+    assign wr_clk = s_axis_clk;
+    assign rd_clk = m_axis_clk;
 
-    assign s_axis_tready = ~wr_full_int;
+    assign s_axis_tready = ~wr_full_int & ~wr_rst;
     assign rd_en_int = m_axis_tready;
 
     if (INPUT_REG) begin
-        always_ff @(posedge wr_clk_int or posedge rst) begin
-            if (rst) begin
+        always_ff @(posedge wr_clk) begin
+            if (wr_rst) begin
                 wr_data_int <= {DWIDTH{1'b0}};
                 wr_en_int <= 1'b0;
             end
@@ -51,8 +54,8 @@ module easy_fifo_axis_async #
         assign wr_en_int = s_axis_tvalid;
     end
     if (OUTPUT_REG) begin
-        always_ff @(posedge rd_clk_int, posedge rst) begin
-            if (rst) begin
+        always_ff @(posedge rd_clk) begin
+            if (rd_rst) begin
                 m_axis_tdata <= {DWIDTH{1'b0}};
                 m_axis_tvalid <= 1'b0;
             end
@@ -64,7 +67,7 @@ module easy_fifo_axis_async #
     end
     else begin
         assign m_axis_tdata = rd_data_int;
-        assign m_axis_tvalid = ~rd_empty_int;
+        assign m_axis_tvalid = ~rd_empty_int & ~rd_rst;
     end
 
     if (DEPTH <= 16) begin
@@ -72,9 +75,7 @@ module easy_fifo_axis_async #
             .DWIDTH (DWIDTH),
             .DEPTH  (16)
         ) u_async_fifo (
-	        .rst      (rst),
-            .wr_clk   (wr_clk_int),
-            .rd_clk   (rd_clk_int),
+            .*,
             .wr_en    (wr_en_int),
             .rd_en    (rd_en_int),
             .wr_data  (wr_data_int),
@@ -88,9 +89,7 @@ module easy_fifo_axis_async #
             .DWIDTH (DWIDTH),
             .DEPTH  (16)
         ) u_async_fifo (
-	        .rst      (rst),
-            .wr_clk   (wr_clk_int),
-            .rd_clk   (rd_clk_int),
+            .*,
             .wr_en    (wr_en_int),
             .rd_en    (~wr_full_async),
             .wr_data  (wr_data_int),
@@ -102,8 +101,8 @@ module easy_fifo_axis_async #
             .DWIDTH   (DWIDTH),
             .DEPTH    (DEPTH-16)
         ) u_sync_fifo (
-        	.clk      (rd_clk_int),
-            .rst      (rst),
+        	.clk      (rd_clk),
+            .rst      (rd_rst),
             .wr_data  (rd_data_async),
             .wr_en    (~rd_empty_async),
             .rd_en    (rd_en_int),
@@ -112,5 +111,7 @@ module easy_fifo_axis_async #
             .rd_empty (rd_empty_int)
         );
     end
+
+    rst_cntrl u_rst_cntrl(.*);
 
 endmodule

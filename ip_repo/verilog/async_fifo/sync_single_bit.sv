@@ -6,7 +6,7 @@ module sync_signle_bit #
     parameter int INPUT_REG = 0
 )
 (
-    input logic clk_in,
+    input logic clk_in = 1'b0,
     input logic clk_out,
     input logic rst,
     input logic [SIZE-1:0] din,

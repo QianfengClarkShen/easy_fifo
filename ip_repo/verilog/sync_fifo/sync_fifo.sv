@@ -1,8 +1,7 @@
 module sync_fifo #
 (
 	parameter int DWIDTH = 32,
-	parameter int DEPTH	= 512,
-	parameter int RAM_STYLE = "auto"
+	parameter int DEPTH	= 512
 )
 (
 	input logic clk,
@@ -15,7 +14,8 @@ module sync_fifo #
 	output logic rd_empty
 );
 	localparam LUT_DEPTH = 16;
-	localparam BRAM_DEPTH = (1 << $clog2(DEPTH-LUT_DEPTH)) < 2 ? 2 : (1 << $clog2(DEPTH-LUT_DEPTH)) ;
+	localparam BRAM_DEPTH = (1 << $clog2(DEPTH-LUT_DEPTH)) < 2 ? 2 : (1 << $clog2(DEPTH-LUT_DEPTH));
+	localparam RAM_STYLE = BRAM_DEPTH > 32 ? "block" : "distributed";
 	(* ram_style = RAM_STYLE *) logic [DWIDTH-1:0] fifo_bram[BRAM_DEPTH-1:0];
 	logic [DWIDTH-1:0] fifo_lutram[LUT_DEPTH-1:0];
 	logic [$clog2(BRAM_DEPTH)-1:0] bram_rd_addr;
@@ -45,7 +45,7 @@ module sync_fifo #
 			bram_reg_1 <= fifo_bram[bram_rd_addr];
 			bram_reg_2 <= bram_reg_1;
 		end
-		always_ff @(posedge clk or posedge rst) begin
+		always_ff @(posedge clk) begin
 			if (rst) begin
 				lutram_rd_ptr <= {{$clog2(LUT_DEPTH)+1}{1'b0}};
 				lutram_wr_ptr <= {{$clog2(LUT_DEPTH)+1}{1'b0}};
@@ -95,7 +95,7 @@ module sync_fifo #
 		assign input_to_bram = wr_en && (~bram_empty || lutram_full);
 	end
 	else begin
-		always_ff @(posedge clk or posedge rst) begin
+		always_ff @(posedge clk) begin
 			if (rst) begin
 				lutram_rd_ptr <= {{$clog2(LUT_DEPTH)}{1'b0}};
 				lutram_wr_ptr <= {{$clog2(LUT_DEPTH)}{1'b0}};

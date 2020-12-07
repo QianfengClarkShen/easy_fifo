@@ -37,7 +37,7 @@ module async_wr_ctrl #
         .bin  (wr_ptr_bin)
     );
 
-    always_ff @(posedge wr_clk or posedge rst) begin
+    always_ff @(posedge wr_clk) begin
         if (rst) begin
             wr_full <= 1'b0;
         end
