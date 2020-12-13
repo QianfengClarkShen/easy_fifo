@@ -22,8 +22,8 @@ module easy_fifo #
     input logic clk,
     input logic rd_clk,
     input logic wr_clk,
-    input logic s_axis_clk,
-    input logic m_axis_clk,
+    input logic s_axis_aclk,
+    input logic m_axis_aclk,
 //regular fifo interface
     input logic [DWIDTH-1:0] wr_data,
     input logic wr_en,

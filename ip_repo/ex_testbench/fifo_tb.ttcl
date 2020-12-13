@@ -25,8 +25,8 @@
 <:			set i_clk "wr_clk" :>
 <:			set o_clk "rd_clk" :>
 <:		} else { :>
-<:			set i_clk "s_axis_clk" :>
-<:			set o_clk "m_axis_clk" :>
+<:			set i_clk "s_axis_aclk" :>
+<:			set o_clk "m_axis_aclk" :>
 <:		} :>
 <: } :>
 <: if {$AXIS == 0} { :>

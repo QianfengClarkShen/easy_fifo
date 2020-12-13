@@ -7,8 +7,8 @@ module easy_fifo_axis_async #
 )
 (
     input logic rst,
-    input logic s_axis_clk = 1'b0,
-    input logic m_axis_clk = 1'b0,
+    input logic s_axis_aclk = 1'b0,
+    input logic m_axis_aclk = 1'b0,
     input logic [DWIDTH-1:0] s_axis_tdata = {DWIDTH{1'b0}},
     input logic s_axis_tvalid = 1'b0,
     output logic s_axis_tready,
@@ -31,8 +31,8 @@ module easy_fifo_axis_async #
     logic [DWIDTH-1:0] rd_data_async;
     logic wr_full_async, rd_empty_async;
 
-    assign wr_clk = s_axis_clk;
-    assign rd_clk = m_axis_clk;
+    assign wr_clk = s_axis_aclk;
+    assign rd_clk = m_axis_aclk;
 
     assign s_axis_tready = ~wr_full_int & ~wr_rst;
     assign rd_en_int = m_axis_tready;

@@ -227,7 +227,7 @@
       </spirit:vendorExtensions>
     </spirit:busInterface>
     <spirit:busInterface>
-      <spirit:name>m_axis_clk</spirit:name>
+      <spirit:name>m_axis_aclk</spirit:name>
       <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock" spirit:version="1.0"/>
       <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock_rtl" spirit:version="1.0"/>
       <spirit:slave/>
@@ -237,14 +237,14 @@
             <spirit:name>CLK</spirit:name>
           </spirit:logicalPort>
           <spirit:physicalPort>
-            <spirit:name>m_axis_clk</spirit:name>
+            <spirit:name>m_axis_aclk</spirit:name>
           </spirit:physicalPort>
         </spirit:portMap>
       </spirit:portMaps>
       <spirit:vendorExtensions>
         <xilinx:busInterfaceInfo>
           <xilinx:enablement>
-            <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="BUSIF_ENABLEMENT.m_axis_clk" xilinx:dependency="$ASYNC != 0 and $AXIS != 0">false</xilinx:isEnabled>
+            <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="BUSIF_ENABLEMENT.m_axis_aclk" xilinx:dependency="$ASYNC != 0 and $AXIS != 0">false</xilinx:isEnabled>
           </xilinx:enablement>
         </xilinx:busInterfaceInfo>
       </spirit:vendorExtensions>
@@ -273,7 +273,7 @@
       </spirit:vendorExtensions>
     </spirit:busInterface>
     <spirit:busInterface>
-      <spirit:name>s_axis_clk</spirit:name>
+      <spirit:name>s_axis_aclk</spirit:name>
       <spirit:busType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock" spirit:version="1.0"/>
       <spirit:abstractionType spirit:vendor="xilinx.com" spirit:library="signal" spirit:name="clock_rtl" spirit:version="1.0"/>
       <spirit:slave/>
@@ -283,14 +283,14 @@
             <spirit:name>CLK</spirit:name>
           </spirit:logicalPort>
           <spirit:physicalPort>
-            <spirit:name>s_axis_clk</spirit:name>
+            <spirit:name>s_axis_aclk</spirit:name>
           </spirit:physicalPort>
         </spirit:portMap>
       </spirit:portMaps>
       <spirit:vendorExtensions>
         <xilinx:busInterfaceInfo>
           <xilinx:enablement>
-            <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="BUSIF_ENABLEMENT.s_axis_clk" xilinx:dependency="$ASYNC != 0 and $AXIS != 0">false</xilinx:isEnabled>
+            <xilinx:isEnabled xilinx:resolve="dependent" xilinx:id="BUSIF_ENABLEMENT.s_axis_aclk" xilinx:dependency="$ASYNC != 0 and $AXIS != 0">false</xilinx:isEnabled>
           </xilinx:enablement>
         </xilinx:busInterfaceInfo>
       </spirit:vendorExtensions>
@@ -413,7 +413,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>db8b082c</spirit:value>
+            <spirit:value>ac76938f</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -429,7 +429,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>e06ff183</spirit:value>
+            <spirit:value>5759b569</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -457,7 +457,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>abf8192a</spirit:value>
+            <spirit:value>9baed066</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -471,7 +471,7 @@
         <spirit:parameters>
           <spirit:parameter>
             <spirit:name>viewChecksum</spirit:name>
-            <spirit:value>c6866490</spirit:value>
+            <spirit:value>4bea3696</spirit:value>
           </spirit:parameter>
         </spirit:parameters>
       </spirit:view>
@@ -544,7 +544,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>s_axis_clk</spirit:name>
+        <spirit:name>s_axis_aclk</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:wireTypeDefs>
@@ -557,7 +557,7 @@
         </spirit:wire>
       </spirit:port>
       <spirit:port>
-        <spirit:name>m_axis_clk</spirit:name>
+        <spirit:name>m_axis_aclk</spirit:name>
         <spirit:wire>
           <spirit:direction>in</spirit:direction>
           <spirit:wireTypeDefs>
@@ -1231,7 +1231,11 @@
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>verilog/async_fifo/sync_single_bit.sv</spirit:name>
+        <spirit:name>verilog/cdc/sync_reset.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>verilog/cdc/sync_single_bit.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
         <spirit:userFileType>CHECKSUM_04d35e0a</spirit:userFileType>
       </spirit:file>
@@ -1291,7 +1295,11 @@
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
       <spirit:file>
-        <spirit:name>verilog/async_fifo/sync_single_bit.sv</spirit:name>
+        <spirit:name>verilog/cdc/sync_reset.sv</spirit:name>
+        <spirit:fileType>systemVerilogSource</spirit:fileType>
+      </spirit:file>
+      <spirit:file>
+        <spirit:name>verilog/cdc/sync_single_bit.sv</spirit:name>
         <spirit:fileType>systemVerilogSource</spirit:fileType>
       </spirit:file>
     </spirit:fileSet>
@@ -1444,6 +1452,7 @@
       <xilinx:supportedFamilies>
         <xilinx:family xilinx:lifeCycle="Production">virtex7</xilinx:family>
         <xilinx:family xilinx:lifeCycle="Production">qvirtex7</xilinx:family>
+        <xilinx:family xilinx:lifeCycle="Production">versal</xilinx:family>
         <xilinx:family xilinx:lifeCycle="Production">kintex7</xilinx:family>
         <xilinx:family xilinx:lifeCycle="Production">kintex7l</xilinx:family>
         <xilinx:family xilinx:lifeCycle="Production">qkintex7</xilinx:family>
@@ -1473,13 +1482,13 @@
       <xilinx:definitionSource>package_project</xilinx:definitionSource>
       <xilinx:vendorDisplayName>clarkshen.com</xilinx:vendorDisplayName>
       <xilinx:coreRevision>2</xilinx:coreRevision>
-      <xilinx:coreCreationDateTime>2020-12-07T02:59:53Z</xilinx:coreCreationDateTime>
+      <xilinx:coreCreationDateTime>2020-12-13T02:43:00Z</xilinx:coreCreationDateTime>
     </xilinx:coreExtensions>
     <xilinx:packagingInfo>
-      <xilinx:xilinxVersion>2020.1</xilinx:xilinxVersion>
-      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="a52a050d"/>
-      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="cf061be9"/>
-      <xilinx:checksum xilinx:scope="ports" xilinx:value="77f74c28"/>
+      <xilinx:xilinxVersion>2020.2</xilinx:xilinxVersion>
+      <xilinx:checksum xilinx:scope="busInterfaces" xilinx:value="4c43354f"/>
+      <xilinx:checksum xilinx:scope="fileGroups" xilinx:value="7af05c6e"/>
+      <xilinx:checksum xilinx:scope="ports" xilinx:value="43690877"/>
       <xilinx:checksum xilinx:scope="hdlParameters" xilinx:value="29a0890b"/>
       <xilinx:checksum xilinx:scope="parameters" xilinx:value="5f98d710"/>
     </xilinx:packagingInfo>

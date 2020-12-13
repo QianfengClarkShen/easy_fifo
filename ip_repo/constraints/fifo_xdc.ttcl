@@ -13,8 +13,8 @@
 <: set AXIS [getIntValue "AXIS"] :>
 <: if {$ASYNC != 0} { :>
 <: if {$AXIS != 0} { :>
-set src_clk  [get_clocks -quiet -of [get_ports s_axis_clk]]
-set dest_clk [get_clocks -quiet -of [get_ports m_axis_clk]]
+set src_clk  [get_clocks -quiet -of [get_ports s_axis_aclk]]
+set dest_clk [get_clocks -quiet -of [get_ports m_axis_aclk]]
 <: } else { :>
 set src_clk  [get_clocks -quiet -of [get_ports wr_clk]]
 set dest_clk [get_clocks -quiet -of [get_ports rd_clk]]
@@ -27,6 +27,6 @@ set_false_path -to [get_cells -hier rst_meta_reg[*]] -quiet
 <: if {$AXIS == 0} { :>
 set_max_delay -from [filter [all_fanout -from [get_ports wr_clk] -flat -endpoints_only] {IS_LEAF}] -through [get_pins -of_obj [get_cells -hier * -filter {NAME=~*u_simple_dp_ram/mem_int_reg*}] -filter {DIRECTION==OUT}] [expr min($src_clk_period,$dest_clk_period)] -datapath_only
 <: } else { :>
-set_max_delay -from [filter [all_fanout -from [get_ports s_axis_clk] -flat -endpoints_only] {IS_LEAF}] -through [get_pins -of_obj [get_cells -hier * -filter {NAME=~*u_simple_dp_ram/mem_int_reg*}] -filter {DIRECTION==OUT}] [expr min($src_clk_period,$dest_clk_period)] -datapath_only
+set_max_delay -from [filter [all_fanout -from [get_ports s_axis_aclk] -flat -endpoints_only] {IS_LEAF}] -through [get_pins -of_obj [get_cells -hier * -filter {NAME=~*u_simple_dp_ram/mem_int_reg*}] -filter {DIRECTION==OUT}] [expr min($src_clk_period,$dest_clk_period)] -datapath_only
 <: } :>
 <: } :>
