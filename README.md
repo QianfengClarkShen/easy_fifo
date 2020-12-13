@@ -1,6 +1,6 @@
 # Easy FIFO
 
-Easy FIFO is a FIFO written in systemverilog. It supports regular FIFO interface and AXI4-Stream interface for both asynchronouse and synchronous FIFOs.
+Easy FIFO is a FIFO written in systemverilog. It supports regular FIFO interface and AXI4-Stream interface for both asynchronous and synchronous FIFOs.
 
 The main motivation of making Easy FIFO is that the large latency (3 cycles for synchronous and 7 cycles for asynchronous) of the Xilinx FIFO IPs kills the application performance.
 
