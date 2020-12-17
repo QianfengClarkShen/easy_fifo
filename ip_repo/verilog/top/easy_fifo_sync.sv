@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module easy_fifo_sync #
 (
     parameter int DWIDTH = 32,
@@ -13,7 +14,8 @@ module easy_fifo_sync #
     output logic wr_full,
     input logic rd_en = 1'b1,
     output logic [DWIDTH-1:0] rd_data,
-    output logic rd_empty
+    output logic rd_empty,
+	output logic [$clog2(DEPTH):0] fifo_cnt
 );
 //internal rst
     logic rst_int;
@@ -76,7 +78,8 @@ module easy_fifo_sync #
         .rd_en    (rd_en_int),
         .rd_data  (rd_data_int),
         .wr_full  (wr_full_int),
-        .rd_empty (rd_empty_int)
+        .rd_empty (rd_empty_int),
+		.fifo_cnt (fifo_cnt)
     );
 
     sync_reset u_sync_reset(

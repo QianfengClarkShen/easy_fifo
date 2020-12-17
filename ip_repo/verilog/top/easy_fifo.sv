@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `define WIDTH_VAL(x) x <= 0 ? 1 : x
 
 module easy_fifo #
@@ -49,7 +50,11 @@ module easy_fifo #
     output logic [DWIDTH/8-1:0] m_axis_tstrb,
     output logic [`WIDTH_VAL(DEST_WIDTH)-1:0] m_axis_tdest,
     output logic [`WIDTH_VAL(USER_WIDTH)-1:0] m_axis_tuser,
-    output logic [`WIDTH_VAL(ID_WIDTH)-1:0] m_axis_tid
+    output logic [`WIDTH_VAL(ID_WIDTH)-1:0] m_axis_tid,
+//fifo counter
+	output logic [$clog2(DEPTH):0] fifo_cnt_wr_synced,
+	output logic [$clog2(DEPTH):0] fifo_cnt_rd_synced,
+	output logic [$clog2(DEPTH):0] fifo_cnt
 );
     localparam int VEC_WIDTH = DWIDTH+DWIDTH/8*HAS_KEEP+DWIDTH/8*HAS_STRB+HAS_LAST+DEST_WIDTH+USER_WIDTH+ID_WIDTH;
     localparam int TDATA_IDX = DWIDTH-1;

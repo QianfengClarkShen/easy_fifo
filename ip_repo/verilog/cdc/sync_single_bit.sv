@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 //only remove metastability for each bit, not guarantee relationship between bits.
 module sync_signle_bit #
 (

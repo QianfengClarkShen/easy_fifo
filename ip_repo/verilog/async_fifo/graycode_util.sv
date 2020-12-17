@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module graycntr #
 (
     parameter int SIZE = 4
@@ -35,4 +36,15 @@ module gray2bin #
     for (i=0; i<SIZE; i=i+1) begin
         assign bin[i] = ^(gray>>i);
     end
+endmodule
+
+module bin2gray #
+(
+	parameter SIZE = 4
+)
+(
+	input logic [SIZE-1:0] bin,
+	output logic [SIZE-1:0] gray
+);
+	assign gray = (bin>>1) ^ bin;
 endmodule

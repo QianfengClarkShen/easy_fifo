@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module sync_reset # (
 	parameter int N_STAGE = 4
 )(

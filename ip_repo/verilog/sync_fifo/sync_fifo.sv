@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module sync_fifo #
 (
 	parameter int DWIDTH = 32,
@@ -11,7 +12,8 @@ module sync_fifo #
 	input logic rd_en,
 	output logic [DWIDTH-1:0] rd_data,
 	output logic wr_full,
-	output logic rd_empty
+	output logic rd_empty,
+	output logic [$clog2(DEPTH):0] fifo_cnt
 );
 	localparam LUT_DEPTH = 16;
 	localparam BRAM_DEPTH = (1 << $clog2(DEPTH-LUT_DEPTH)) < 2 ? 2 : (1 << $clog2(DEPTH-LUT_DEPTH));
@@ -56,8 +58,10 @@ module sync_fifo #
 				bram_to_lutram <= 1'b0;
 				bram_to_lutram_1 <= 1'b0;
 				bram_to_lutram_2 <= 1'b0;
+				fifo_cnt <= {($clog2(DEPTH)+1){1'b0}};
 			end
 			else begin
+				fifo_cnt <= bram_wr_ptr+lutram_wr_ptr-lutram_rd_ptr-bram_rd_ptr;
 				if (~bram_full & input_to_bram) begin
 					fifo_bram[bram_wr_addr] <= wr_data;
 					bram_wr_ptr <= bram_wr_ptr + 1'b1;
@@ -97,10 +101,12 @@ module sync_fifo #
 	else begin
 		always_ff @(posedge clk) begin
 			if (rst) begin
-				lutram_rd_ptr <= {{$clog2(LUT_DEPTH)}{1'b0}};
-				lutram_wr_ptr <= {{$clog2(LUT_DEPTH)}{1'b0}};
+				lutram_rd_ptr <= {($clog2(LUT_DEPTH)+1){1'b0}};
+				lutram_wr_ptr <= {($clog2(LUT_DEPTH)+1){1'b0}};
+				fifo_cnt <= {($clog2(DEPTH)+1){1'b0}};
 			end
 			else begin
+				fifo_cnt <= lutram_wr_ptr - lutram_rd_ptr;
 				if (input_to_lutram) begin
 					fifo_lutram[lutram_wr_addr] <= wr_data;
 					lutram_wr_ptr <= lutram_wr_ptr + 1'b1;

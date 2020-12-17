@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module simple_dp_ram #
 (
     parameter int DWIDTH = 64,

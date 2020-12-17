@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 module rst_cntrl (
     input logic rst,
     input logic wr_clk,
