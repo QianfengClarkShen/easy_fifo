@@ -45,7 +45,7 @@
 <: set o_ready "m_axis_tready" :>
 <: } :>
 <: ;#start of systemverilog :>
-`timescale 1ps/1ps
+`timescale 1ns/1ps
 class randvec #(int SIZE = 8);
     rand bit[SIZE-1:0] data;
 endclass
@@ -84,10 +84,6 @@ module <=: $ComponentName :>_tb ();
     logic <=: $i_valid :>, <=: $o_valid :>;
     logic <=: $i_ready :>, <=: $o_ready :>;
 
-    //don't know why these wires have to be presented in vivado
-    logic [DWIDTH-1:0] <=: $i_data :>_wire;
-    logic <=: $i_valid :>_wire, <=: $o_ready :>_wire;
-
 <: if {$AXIS != 0} { :>
     //axis optional ports
 <: } :>
@@ -110,6 +106,13 @@ module <=: $ComponentName :>_tb ();
     logic [<=: [expr $ID_WIDTH-1] :>:0] s_axis_tid, m_axis_tid;
 <: } :>
 
+<: if {$ASYNC == 0} { :>
+    logic [$clog2(DEPTH):0] fifo_cnt;
+<: } else { :>
+    logic [$clog2(DEPTH):0] fifo_cnt_wr_synced;
+    logic [$clog2(DEPTH):0] fifo_cnt_rd_synced;
+<: } :>
+
     randvec #(DWIDTH) vec = new;
 
     //virutal FIFO
@@ -124,37 +127,12 @@ module <=: $ComponentName :>_tb ();
     real s_linerate;
     real m_linerate;
 
-    <=: $ComponentName :> # (
-        .ASYNC(<=: $ASYNC :>),
-        .AXIS(<=: $AXIS :>),
-        .DWIDTH(<=: $DWIDTH :>),
-        .DEPTH(<=: $DEPTH :>),
-        .INPUT_REG(<=: $INPUT_REG :>),
-        .OUTPUT_REG(<=: $OUTPUT_REG :>),
-        .HAS_KEEP(<=: $HAS_KEEP :>),
-        .HAS_LAST(<=: $HAS_LAST :>),
-        .HAS_STRB(<=: $HAS_STRB :>),
-        .DEST_WIDTH(<=: $DEST_WIDTH :>),
-        .USER_WIDTH(<=: $USER_WIDTH :>),
-        .ID_WIDTH(<=: $ID_WIDTH :>)
-    ) u_easy_fifo (
-        .*,
-<: if {$AXIS == 0} { :>
-        .wr_data(wr_data_wire),
-        .wr_en(wr_en_wire),
-        .rd_en(rd_en_wire)
-<: } else { :>
-        .s_axis_tdata(s_axis_tdata_wire),
-        .s_axis_tvalid(s_axis_tvalid_wire),
-        .m_axis_tready(m_axis_tready_wire)
-<: } :>
-    );
-
+    <=: $ComponentName :> u_easy_fifo (.*);
 
 //control
     initial begin
         rst = 1'b1;
-        $display("start by making the input rate 10 times higher than output rate");
+        $display("[%t] : start by making the input rate 10 times higher than output rate", $time);
         s_wait_cycle = 2;
         s_linerate = 1/real'(s_wait_cycle)*1/INPUT_CLK_PERIOD;
         m_linerate = s_linerate/10;
@@ -162,19 +140,25 @@ module <=: $ComponentName :>_tb ();
         state = TRY_FULL;
         #100ns;
         rst = 1'b0;
+        //wait for rst_int to finish
+<: if {$ASYNC == 0} { :>
+        repeat(10) @(posedge clk);
+<: } else { :>
+        repeat(10) @(posedge <=: $i_clk :>);
+<: } :>
 <: if {$AXIS == 0} { :>
         wait(wr_full == 1'b1);
 <: } else { :>
         wait(s_axis_tready === 1'b0);
 <: } :>
-        $display("FIFO is full now, try keep push it for 1 us");
+        $display("[%t] : FIFO is full now, try keep push it for 1 us", $time);
         #1us;
-        $display("now match the output rate with the input rate, keep for 1 us");
+        $display("[%t] : now match the output rate with the input rate, keep for 1 us", $time);
         m_linerate = s_linerate;
         m_wait_cycle = int'(1/(m_linerate*OUTPUT_CLK_PERIOD));
         state = STEADY;
         #1us;
-        $display("try empty the fifo, make the input rate 10 times slower than output rate");
+        $display("[%t] : try empty the fifo, make the input rate 10 times slower than output rate", $time);
         m_wait_cycle = 2;
         m_linerate = 1/real'(m_wait_cycle)*1/OUTPUT_CLK_PERIOD;
         s_linerate = m_linerate/10;
@@ -185,55 +169,56 @@ module <=: $ComponentName :>_tb ();
 <: } else { :>
         wait(m_axis_tvalid === 1'b0);
 <: } :>
-        $display("FIFO is empty now, try keep push it for 1 us");
+        $display("[%t] : FIFO is empty now, try keep push it for 1 us", $time);
         #1us;
-        $display("test finished");
+        $display("[%t] : test finished", $time);
         state = FINISH;
     end
 
 //slave
     initial begin
-        s_wait_cnt = s_wait_cycle;
+        s_wait_cnt <= s_wait_cycle;
         wait(rst === 1'b0);
         repeat(10) @(posedge <=: $i_clk :>);
         repeat(10) @(posedge <=: $o_clk :>);
         while (state !== FINISH) begin
             @(posedge <=: $i_clk :>);
             if (s_wait_cnt === 0)
-                s_wait_cnt = s_wait_cycle;
+                s_wait_cnt <= s_wait_cycle - 1;
+            else
+                s_wait_cnt <= s_wait_cnt - 1;
             vec.randomize();
-            s_wait_cnt = s_wait_cnt - 1;
         end
     end
 
 //master
     initial begin
-        m_wait_cnt = m_wait_cycle;
-        <=: $o_ready :> = 1'b0;
+        m_wait_cnt <= m_wait_cycle;
+        <=: $o_ready :> <= 1'b0;
         wait(rst === 1'b0);
         repeat(10) @(posedge <=: $i_clk :>);
         repeat(10) @(posedge <=: $o_clk :>);
         while (state !== FINISH || v_ridx !== v_widx) begin
             @(posedge <=: $o_clk :>);
 <: if {$AXIS == 0} { :>
-            if (~rd_empty && rd_en_wire && golden_data !== <=: $o_data :>) begin
+            if (~rd_empty && rd_en && golden_data !== <=: $o_data :>) begin
 <: } else { :>
-            if (m_axis_tvalid && m_axis_tready_wire && golden_data !== <=: $o_data :>) begin
+            if (m_axis_tvalid && m_axis_tready && golden_data !== <=: $o_data :>) begin
 <: } :>
                 $display("[%t] : NOT match! expected %x, get %x", $time, golden_data, <=: $o_data :>);
                 #(OUTPUT_CLK_PERIOD);
                 $finish;
             end
             if (m_wait_cnt === 0) begin
-                m_wait_cnt = m_wait_cycle;
-                <=: $o_ready :> = 1'b1;
+                m_wait_cnt <= m_wait_cycle - 1;
+                <=: $o_ready :> <= 1'b1;
             end
             else begin
-                <=: $o_ready :> = 1'b0;
+                <=: $o_ready :> <= 1'b0;
+                m_wait_cnt <= m_wait_cnt - 1;
             end
-            m_wait_cnt = m_wait_cnt - 1;
         end
-        $display("All matched!");
+        $display("TEST PASSED!");
         #100ns;
         $finish;
     end
@@ -260,13 +245,15 @@ module <=: $ComponentName :>_tb ();
     always_ff @(posedge <=: $i_clk :>, posedge rst) begin
         if (rst) begin
             v_widx <= 'b0;
+            for (int i = 0; i < 2*DEPTH; i++)
+                vFIFO[i] <= {DWIDTH{1'b0}};
         end
 <: if {$AXIS == 0} { :>
-        else if (wr_en_wire && ~wr_full) begin
+        else if (wr_en && ~wr_full) begin
 <: } else { :>   
-        else if (s_axis_tvalid_wire && s_axis_tready) begin
+        else if (s_axis_tvalid && s_axis_tready) begin
 <: } :>
-            vFIFO[v_widx] <= <=: $i_data :>_wire;
+            vFIFO[v_widx] <= <=: $i_data :>;
             v_widx <= v_widx + 1'b1;
         end
     end
@@ -275,9 +262,9 @@ module <=: $ComponentName :>_tb ();
         if (rst)
             v_ridx <= 'b0;
 <: if {$AXIS == 0} { :>
-        else if (rd_en_wire && ~rd_empty)
+        else if (rd_en && ~rd_empty)
 <: } else { :>
-        else if (m_axis_tready_wire && m_axis_tvalid)
+        else if (m_axis_tready && m_axis_tvalid)
 <: } :>
             v_ridx <= v_ridx + 1'b1;
     end 
@@ -290,10 +277,6 @@ module <=: $ComponentName :>_tb ();
 <: } :>
 
     assign golden_data = vFIFO[v_ridx];
-
-    assign <=: $i_data :>_wire = <=: $i_data :>;
-    assign <=: $i_valid :>_wire = <=: $i_valid :>;
-    assign <=: $o_ready :>_wire = <=: $o_ready :>;
 
 <: if {$HAS_KEEP != 0} { :>
     assign s_axis_tkeep = {DWIDTH/8{1'b1}};
