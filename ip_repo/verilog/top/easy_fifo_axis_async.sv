@@ -76,7 +76,7 @@ module easy_fifo_axis_async #
     if (DEPTH <= 16) begin
         async_fifo #(
             .DWIDTH (DWIDTH),
-            .DEPTH  (16)
+            .DEPTH  (DEPTH)
         ) u_async_fifo (
             .*,
             .wr_en    (wr_en_int),
