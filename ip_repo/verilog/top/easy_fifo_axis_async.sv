@@ -8,14 +8,14 @@ module easy_fifo_axis_async #
 )
 (
     input logic rst,
-    input logic s_axis_aclk = 1'b0,
-    input logic m_axis_aclk = 1'b0,
+    input logic s_axis_aclk,
+    input logic m_axis_aclk,
     input logic [DWIDTH-1:0] s_axis_tdata = {DWIDTH{1'b0}},
-    input logic s_axis_tvalid = 1'b0,
+    input logic s_axis_tvalid,
     output logic s_axis_tready,
     output logic [DWIDTH-1:0] m_axis_tdata,
     output logic m_axis_tvalid,
-    input logic m_axis_tready = 1'b1,
+    input logic m_axis_tready,
 	output logic [$clog2(DEPTH):0] fifo_cnt_wr_synced,
 	output logic [$clog2(DEPTH):0] fifo_cnt_rd_synced
 );
@@ -37,24 +37,23 @@ module easy_fifo_axis_async #
     assign wr_clk = s_axis_aclk;
     assign rd_clk = m_axis_aclk;
 
-    assign s_axis_tready = ~wr_full_int & ~wr_rst;
-    assign rd_en_int = m_axis_tready;
-
     if (INPUT_REG) begin
         always_ff @(posedge wr_clk) begin
             if (wr_rst) begin
                 wr_data_int <= {DWIDTH{1'b0}};
                 wr_en_int <= 1'b0;
             end
-            else begin
+			else if (s_axis_tready) begin
                 wr_data_int <= s_axis_tdata;
                 wr_en_int <= s_axis_tvalid;
             end
-       end
+        end
+		assign s_axis_tready = (~wr_full_int | ~wr_en_int) & ~wr_rst;
     end
     else begin
         assign wr_data_int = s_axis_tdata;
         assign wr_en_int = s_axis_tvalid;
+		assign s_axis_tready = ~wr_full_int & ~wr_rst;
     end
     if (OUTPUT_REG) begin
         always_ff @(posedge rd_clk) begin
@@ -62,15 +61,17 @@ module easy_fifo_axis_async #
                 m_axis_tdata <= {DWIDTH{1'b0}};
                 m_axis_tvalid <= 1'b0;
             end
-            else begin
+            else if (rd_en_int) begin
                 m_axis_tdata <= rd_data_int;
                 m_axis_tvalid <= ~rd_empty_int;
             end
         end
+		assign rd_en_int = m_axis_tready | ~m_axis_tvalid;
     end
     else begin
         assign m_axis_tdata = rd_data_int;
         assign m_axis_tvalid = ~rd_empty_int & ~rd_rst;
+		assign rd_en_int = m_axis_tready;
     end
 
     if (DEPTH <= 16) begin
