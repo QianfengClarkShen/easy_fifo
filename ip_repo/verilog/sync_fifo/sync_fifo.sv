@@ -15,22 +15,14 @@ module sync_fifo #
 	output logic rd_empty,
 	output logic [$clog2(DEPTH):0] fifo_cnt
 );
-	localparam LUT_DEPTH = 16;
-	localparam BRAM_DEPTH = (1 << $clog2(DEPTH-LUT_DEPTH)) < 2 ? 2 : (1 << $clog2(DEPTH-LUT_DEPTH));
+	localparam int LUT_DEPTH = DEPTH < 16 ? DEPTH : 16;
+	localparam int BRAM_DEPTH = 1 << $clog2(DEPTH-LUT_DEPTH);
 	localparam RAM_STYLE = BRAM_DEPTH > 32 ? "block" : "distributed";
-	(* ram_style = RAM_STYLE *) logic [DWIDTH-1:0] fifo_bram[BRAM_DEPTH-1:0];
 	logic [DWIDTH-1:0] fifo_lutram[LUT_DEPTH-1:0];
-	logic [$clog2(BRAM_DEPTH)-1:0] bram_rd_addr;
-	logic [$clog2(BRAM_DEPTH)-1:0] bram_wr_addr;
-	logic [$clog2(BRAM_DEPTH):0] bram_rd_ptr;
-	logic [$clog2(BRAM_DEPTH):0] bram_wr_ptr;
-	logic [DWIDTH-1:0] bram_reg_1, bram_reg_2;
 	logic [$clog2(LUT_DEPTH)-1:0] lutram_rd_addr;
 	logic [$clog2(LUT_DEPTH)-1:0] lutram_wr_addr;
 	logic [$clog2(LUT_DEPTH):0] lutram_rd_ptr;
 	logic [$clog2(LUT_DEPTH):0] lutram_wr_ptr;
-	logic bram_valid_1, bram_valid_2;
-	logic bram_to_lutram, bram_to_lutram_1, bram_to_lutram_2;
 
 	logic [DWIDTH-1:0] data_from_fifo;
 
@@ -40,9 +32,18 @@ module sync_fifo #
 	logic bram_empty;
 	logic input_to_output;
 	logic input_to_lutram;
-	logic input_to_bram;
 
 	if (DEPTH > 16) begin
+		(* ram_style = RAM_STYLE *) logic [DWIDTH-1:0] fifo_bram[BRAM_DEPTH-1:0];
+		logic [$clog2(BRAM_DEPTH)-1:0] bram_rd_addr;
+		logic [$clog2(BRAM_DEPTH)-1:0] bram_wr_addr;
+		logic [$clog2(BRAM_DEPTH):0] bram_rd_ptr;
+		logic [$clog2(BRAM_DEPTH):0] bram_wr_ptr;
+		logic [DWIDTH-1:0] bram_reg_1, bram_reg_2;
+		logic bram_valid_1, bram_valid_2;
+		logic bram_to_lutram, bram_to_lutram_1, bram_to_lutram_2;
+		logic input_to_bram;
+
 		always_ff @(posedge clk) begin
 			bram_reg_1 <= fifo_bram[bram_rd_addr];
 			bram_reg_2 <= bram_reg_1;
@@ -96,6 +97,8 @@ module sync_fifo #
 		assign wr_full = bram_full;
 		assign bram_full = bram_rd_ptr == {~bram_wr_ptr[$clog2(BRAM_DEPTH)], bram_wr_addr};
 		assign bram_empty = bram_rd_ptr == bram_wr_ptr && ~bram_valid_1 && ~bram_valid_2;
+		assign bram_wr_addr = bram_wr_ptr[$clog2(BRAM_DEPTH)-1:0];
+		assign bram_rd_addr = bram_rd_ptr[$clog2(BRAM_DEPTH)-1:0];
 		assign input_to_bram = wr_en && (~bram_empty || lutram_full);
 	end
 	else begin
@@ -118,15 +121,10 @@ module sync_fifo #
 		assign wr_full = lutram_full;
 		assign bram_full = 1'b1;
 		assign bram_empty = 1'b1;
-		assign input_to_bram = 1'b0;
 	end
 
 	assign lutram_wr_addr = lutram_wr_ptr[$clog2(LUT_DEPTH)-1:0];
 	assign lutram_rd_addr = lutram_rd_ptr[$clog2(LUT_DEPTH)-1:0];
-	assign bram_wr_addr = bram_wr_ptr[$clog2(BRAM_DEPTH)-1:0];
-	assign bram_rd_addr = bram_rd_ptr[$clog2(BRAM_DEPTH)-1:0];
-
-
 	assign lutram_full = lutram_rd_ptr == {~lutram_wr_ptr[$clog2(LUT_DEPTH)],lutram_wr_addr};
 	assign lutram_empty = lutram_rd_ptr == lutram_wr_ptr;
 
