@@ -8,18 +8,15 @@ module easy_fifo_axis_sync #
 )
 (
     input logic rst,
-    input logic clk = 1'b0,
-    input logic [DWIDTH-1:0] s_axis_tdata = {DWIDTH{1'b0}},
-    input logic s_axis_tvalid = 1'b0,
+    input logic clk,
+    input logic [DWIDTH-1:0] s_axis_tdata,
+    input logic s_axis_tvalid,
     output logic s_axis_tready,
     output logic [DWIDTH-1:0] m_axis_tdata,
     output logic m_axis_tvalid,
-    input logic m_axis_tready = 1'b1,
+    input logic m_axis_tready,
 	output logic [$clog2(DEPTH):0] fifo_cnt
 );
-//internal rst
-    logic rst_int;
-
 //internal clocks
     logic wr_clk_int, rd_clk_int;
 
@@ -31,40 +28,41 @@ module easy_fifo_axis_sync #
     assign wr_clk_int = clk;
     assign rd_clk_int = clk;
 
-    assign s_axis_tready = ~wr_full_int;
-    assign rd_en_int = m_axis_tready;
-
     if (INPUT_REG) begin
         always_ff @(posedge wr_clk_int) begin
-            if (rst_int) begin
+            if (rst) begin
                 wr_data_int <= {DWIDTH{1'b0}};
                 wr_en_int <= 1'b0;
             end
-            else begin
+            else if (s_axis_tready) begin
                 wr_data_int <= s_axis_tdata;
                 wr_en_int <= s_axis_tvalid;
             end
-       end
+		end
+		assign s_axis_tready = ~wr_full_int | ~wr_en_int;
     end
     else begin
         assign wr_data_int = s_axis_tdata;
         assign wr_en_int = s_axis_tvalid;
+		assign s_axis_tready = ~wr_full_int;
     end
     if (OUTPUT_REG) begin
         always_ff @(posedge rd_clk_int) begin
-            if (rst_int) begin
+            if (rst) begin
                 m_axis_tdata <= {DWIDTH{1'b0}};
                 m_axis_tvalid <= 1'b0;
             end
-            else begin
+            else if (rd_en_int) begin
                 m_axis_tdata <= rd_data_int;
                 m_axis_tvalid <= ~rd_empty_int;
             end
         end
+		assign rd_en_int = m_axis_tready | ~m_axis_tvalid;
     end
     else begin
         assign m_axis_tdata = rd_data_int;
         assign m_axis_tvalid = ~rd_empty_int;
+		assign rd_en_int = m_axis_tready;
     end
 
     sync_fifo #(
@@ -72,7 +70,7 @@ module easy_fifo_axis_sync #
         .DEPTH    (DEPTH)
     ) u_sync_fifo (
     	.clk      (clk),
-        .rst      (rst_int),
+        .rst      (rst),
         .wr_data  (wr_data_int),
         .wr_en    (wr_en_int),
         .rd_en    (rd_en_int),
@@ -82,10 +80,4 @@ module easy_fifo_axis_sync #
 		.fifo_cnt (fifo_cnt)
     );
 
-    sync_reset u_sync_reset(
-    	.clk     (clk),
-        .rst_in  (rst),
-        .rst_out (rst_int)
-    );
-    
 endmodule
