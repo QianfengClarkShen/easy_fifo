@@ -8,18 +8,15 @@ module easy_fifo_sync #
 )
 (
     input logic rst,
-    input logic clk = 1'b0,
-    input logic [DWIDTH-1:0] wr_data = {DWIDTH{1'b0}},
-    input logic wr_en = 1'b0,
+    input logic clk,
+    input logic [DWIDTH-1:0] wr_data,
+    input logic wr_en,
     output logic wr_full,
-    input logic rd_en = 1'b1,
+    input logic rd_en,
     output logic [DWIDTH-1:0] rd_data,
     output logic rd_empty,
 	output logic [$clog2(DEPTH):0] fifo_cnt
 );
-//internal rst
-    logic rst_int;
-
 //internal clocks
     logic wr_clk_int, rd_clk_int;
 
@@ -31,40 +28,41 @@ module easy_fifo_sync #
     assign wr_clk_int = clk;
     assign rd_clk_int = clk;
 
-    assign wr_full = wr_full_int;
-    assign rd_en_int = rd_en;
-
     if (INPUT_REG) begin
         always_ff @(posedge wr_clk_int) begin
-            if (rst_int) begin
+            if (rst) begin
                 wr_data_int <= {DWIDTH{1'b0}};
                 wr_en_int <= 1'b0;
             end
-            else begin
+            else if (~wr_full) begin
                 wr_data_int <= wr_data;
                 wr_en_int <= wr_en;
             end
-       end
+        end
+	 	assign wr_full = wr_full_int & wr_en_int;
     end
     else begin
         assign wr_data_int = wr_data;
         assign wr_en_int = wr_en;
+		assign wr_full = wr_full_int;
     end
     if (OUTPUT_REG) begin
         always_ff @(posedge rd_clk_int) begin
-            if (rst_int) begin
+            if (rst) begin
                 rd_data <= {DWIDTH{1'b0}};
                 rd_empty <= 1'b1;
             end
-            else begin
+            else if (rd_en_int) begin
                 rd_data <= rd_data_int;
                 rd_empty <= rd_empty_int;
             end
         end
+		assign rd_en_int = rd_en | rd_empty;
     end
     else begin
         assign rd_data = rd_data_int;
         assign rd_empty = rd_empty_int;
+		assign rd_en_int = rd_en;
     end
 
     sync_fifo #(
@@ -72,7 +70,7 @@ module easy_fifo_sync #
         .DEPTH    (DEPTH)
     ) u_sync_fifo (
     	.clk      (clk),
-        .rst      (rst_int),
+        .rst      (rst),
         .wr_data  (wr_data_int),
         .wr_en    (wr_en_int),
         .rd_en    (rd_en_int),
@@ -81,11 +79,4 @@ module easy_fifo_sync #
         .rd_empty (rd_empty_int),
 		.fifo_cnt (fifo_cnt)
     );
-
-    sync_reset u_sync_reset(
-    	.clk     (clk),
-        .rst_in  (rst),
-        .rst_out (rst_int)
-    );
-
 endmodule
