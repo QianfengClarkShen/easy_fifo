@@ -32,24 +32,23 @@ module easy_fifo_async #
     logic wr_full_async, rd_empty_async;
 
 
-    assign wr_full = wr_full_int | wr_rst;
-    assign rd_en_int = rd_en;
-
     if (INPUT_REG) begin
         always_ff @(posedge wr_clk) begin
             if (wr_rst) begin
                 wr_data_int <= {DWIDTH{1'b0}};
                 wr_en_int <= 1'b0;
             end
-            else begin
+			else if (~wr_full) begin
                 wr_data_int <= wr_data;
                 wr_en_int <= wr_en;
             end
-       end
+        end
+		assign wr_full = (wr_full_int & wr_en_int) | wr_rst;
     end
     else begin
         assign wr_data_int = wr_data;
         assign wr_en_int = wr_en;
+		assign wr_full = wr_full_int | wr_rst;
     end
     if (OUTPUT_REG) begin
         always_ff @(posedge rd_clk) begin
@@ -57,15 +56,17 @@ module easy_fifo_async #
                 rd_data <= {DWIDTH{1'b0}};
                 rd_empty <= 1'b1;
             end
-            else begin
+			else if (rd_en_int) begin
                 rd_data <= rd_data_int;
                 rd_empty <= rd_empty_int;
             end
         end
+		assign rd_en_int = rd_en | rd_empty;
     end
     else begin
         assign rd_data = rd_data_int;
         assign rd_empty = rd_empty_int | rd_rst;
+		assign rd_en_int = rd_en;
     end
 
     if (DEPTH <= 16) begin
